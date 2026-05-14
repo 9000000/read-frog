@@ -8,7 +8,13 @@ export async function googleTranslate(
   sourceText: string,
   fromLang: string,
   toLang: string,
+  options?: { textType?: "html" | "plain" },
 ): Promise<string> {
+  const textType = options?.textType ?? "plain"
+  const preparedText = textType === "plain"
+    ? sourceText.replace(/\n/g, "<br />")
+    : sourceText
+
   const resp = await fetch(
     GOOGLE_TRANSLATE_HTML_URL,
     {
@@ -18,7 +24,7 @@ export async function googleTranslate(
         "X-Goog-API-Key": GOOGLE_TRANSLATE_HTML_API_KEY,
       },
       body: JSON.stringify([
-        [[sourceText], fromLang, toLang],
+        [[preparedText], fromLang, toLang],
         GOOGLE_TRANSLATE_HTML_CLIENT,
       ]),
     },
@@ -51,7 +57,10 @@ export async function googleTranslate(
       throw new TypeError("Unexpected response format from translation API")
     }
 
-    return result[0][0]
+    const translatedText = result[0][0]
+    return textType === "plain"
+      ? translatedText.replace(/<br\s*\/?>/gi, "\n")
+      : translatedText
   }
   catch (error) {
     throw new Error(

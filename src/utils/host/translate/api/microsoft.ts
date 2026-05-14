@@ -2,13 +2,15 @@ export async function microsoftTranslate(
   sourceText: string,
   fromLang: string,
   toLang: string,
+  options?: { textType?: "html" | "plain" },
 ): Promise<string> {
   const effectiveFromLang = fromLang === "auto" ? "" : fromLang
+  const textType = options?.textType ?? "plain"
 
   const token = await refreshMicrosoftToken()
 
   const resp = await fetch(
-    `https://api-edge.cognitive.microsofttranslator.com/translate?from=${effectiveFromLang}&to=${toLang}&api-version=3.0&includeSentenceLength=true&textType=html`,
+    `https://api-edge.cognitive.microsofttranslator.com/translate?from=${effectiveFromLang}&to=${toLang}&api-version=3.0&includeSentenceLength=true&textType=${textType}`,
     {
       method: "POST",
       headers: {

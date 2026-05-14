@@ -146,6 +146,7 @@ async function translateWithStandardProvider({
     enableAIContentAware: translateRequest.enableAIContentAware,
     extraHashTags: ["selectionTranslation"],
     webPageContext,
+    textType: "plain",
   })
 
   return translatedText

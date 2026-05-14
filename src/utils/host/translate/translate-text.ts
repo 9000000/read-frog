@@ -68,6 +68,7 @@ async function buildWebPageHashComponents(
   providerConfig: ProviderConfig,
   partialLangConfig: { sourceCode: LangCodeISO6393 | "auto", targetCode: LangCodeISO6393 },
   enableAIContentAware: boolean,
+  textType?: "html" | "plain",
   webPageContext?: WebPagePromptContext,
 ): Promise<string[]> {
   const preparedText = prepareTranslationText(text)
@@ -77,6 +78,7 @@ async function buildWebPageHashComponents(
     JSON.stringify(providerConfig),
     partialLangConfig.sourceCode,
     partialLangConfig.targetCode,
+    textType ?? "plain",
   ]
 
   if (!isLLMProviderConfig(providerConfig)) {
@@ -114,6 +116,7 @@ export interface TranslateTextOptions {
   enableAIContentAware?: boolean
   extraHashTags?: string[]
   webPageContext?: WebPagePromptContext
+  textType?: "html" | "plain"
 }
 
 /**
@@ -128,6 +131,7 @@ export async function translateTextCore(options: TranslateTextOptions): Promise<
     enableAIContentAware = false,
     extraHashTags = [],
     webPageContext,
+    textType,
   } = options
 
   const preparedText = prepareTranslationText(text)
@@ -142,6 +146,7 @@ export async function translateTextCore(options: TranslateTextOptions): Promise<
     providerConfig,
     { sourceCode: langConfig.sourceCode, targetCode: langConfig.targetCode },
     enableAIContentAware,
+    textType,
     normalizedWebPageContext,
   )
 
@@ -154,6 +159,7 @@ export async function translateTextCore(options: TranslateTextOptions): Promise<
     providerConfig,
     scheduleAt: Date.now(),
     hash: Sha256Hex(...hashComponents),
+    textType,
     webTitle: normalizedWebPageContext?.webTitle,
     webContent: normalizedWebPageContext?.webContent,
     webSummary: normalizedWebPageContext?.webSummary,

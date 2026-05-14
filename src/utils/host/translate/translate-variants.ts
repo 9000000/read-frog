@@ -59,6 +59,7 @@ async function translateTextUsingPageConfig(
   options: {
     extraHashTags?: string[]
     webPageContext?: { webTitle?: string | null, webContent?: string | null, webSummary?: string | null }
+    textType?: "html" | "plain"
   } = {},
 ): Promise<string> {
   const preparedText = prepareTranslationText(text)
@@ -97,6 +98,7 @@ async function translateTextUsingPageConfig(
     enableAIContentAware: config.translate.enableAIContentAware,
     extraHashTags: options.extraHashTags,
     webPageContext: options.webPageContext,
+    textType: options.textType,
   })
 }
 
@@ -111,6 +113,7 @@ export async function translateTextForPage(text: string): Promise<string> {
 
   return translateTextUsingPageConfig(config, text, {
     webPageContext,
+    textType: "html",
   })
 }
 
@@ -132,6 +135,7 @@ export async function translateTextForPageTitle(text: string): Promise<string> {
       webContent: webPageContext?.webContent,
       webSummary: webPageContext?.webSummary,
     },
+    textType: "plain",
   })
 }
 
@@ -184,5 +188,6 @@ export async function translateTextForInput(
     providerConfig,
     enableAIContentAware: config.translate.enableAIContentAware,
     webPageContext,
+    textType: "plain",
   })
 }

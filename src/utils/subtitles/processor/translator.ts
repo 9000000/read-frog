@@ -72,6 +72,7 @@ async function buildSubtitleHashComponents(
   enableAIContentAware: boolean,
   subtitlePromptContext: SubtitlePromptContext,
   subtitlesTextContent: string,
+  textType: "html" | "plain",
 ): Promise<string[]> {
   const preparedText = prepareTranslationText(text)
   const normalizedSubtitlesTextContent = normalizePromptContextValue(subtitlesTextContent)
@@ -80,6 +81,7 @@ async function buildSubtitleHashComponents(
     JSON.stringify(providerConfig),
     partialLangConfig.sourceCode,
     partialLangConfig.targetCode,
+    textType,
   ]
 
   if (!isLLMProviderConfig(providerConfig)) {
@@ -117,6 +119,7 @@ async function translateSingleSubtitle(
   videoContext: SubtitlesVideoContext,
 ): Promise<string> {
   const subtitlePromptContext = normalizeSubtitlePromptContext(videoContext)
+  const textType = "plain" as const
   const hashComponents = await buildSubtitleHashComponents(
     text,
     providerConfig,
@@ -124,6 +127,7 @@ async function translateSingleSubtitle(
     enableAIContentAware,
     subtitlePromptContext,
     videoContext.subtitlesTextContent,
+    textType,
   )
 
   if (enableAIContentAware) {
@@ -137,6 +141,7 @@ async function translateSingleSubtitle(
     providerConfig,
     scheduleAt: Date.now(),
     hash: Sha256Hex(...hashComponents),
+    textType,
     videoTitle: enableAIContentAware ? subtitlePromptContext.videoTitle : undefined,
     summary: enableAIContentAware ? subtitlePromptContext.videoSummary : undefined,
   })

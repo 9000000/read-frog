@@ -20,6 +20,7 @@ export async function executeTranslate<TContext>(
     forceBackgroundFetch?: boolean
     isBatch?: boolean
     context?: TContext
+    textType?: "html" | "plain"
   },
 ) {
   const preparedText = prepareTranslationText(text)
@@ -37,10 +38,10 @@ export async function executeTranslate<TContext>(
       throw new Error(`Invalid target language code: ${langConfig.targetCode}`)
     }
     if (provider === "google-translate") {
-      translatedText = await googleTranslate(preparedText, sourceLang, targetLang)
+      translatedText = await googleTranslate(preparedText, sourceLang, targetLang, { textType: options?.textType })
     }
     else if (provider === "microsoft-translate") {
-      translatedText = await microsoftTranslate(preparedText, sourceLang, targetLang)
+      translatedText = await microsoftTranslate(preparedText, sourceLang, targetLang, { textType: options?.textType })
     }
   }
   else if (isPureAPIProvider(provider)) {
