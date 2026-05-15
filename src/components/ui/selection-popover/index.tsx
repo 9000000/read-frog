@@ -377,7 +377,8 @@ function SelectionPopoverContent({
           </SelectionPopoverContentContext>
         ),
       },
-      props,
+      // Remove style from inner shell, we apply it to outer shell
+      { ...props, style: undefined },
     ),
     render,
     state: {
@@ -414,6 +415,7 @@ function SelectionPopoverContent({
           handleDragStop={handleDragStop}
           handleResizeStop={handleResizeStop}
           handleWheel={handleWheel}
+          style={props.style}
         >
           {shell}
         </SelectionPopoverShell>

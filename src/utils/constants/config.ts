@@ -104,6 +104,10 @@ export const DEFAULT_CONFIG: Config = {
     enabled: true,
     disabledSelectionToolbarPatterns: [],
     opacity: DEFAULT_SELECTION_OVERLAY_OPACITY,
+    theme: {
+      backgroundColor: "",
+      textColor: "",
+    },
     features: {
       translate: {
         enabled: true,

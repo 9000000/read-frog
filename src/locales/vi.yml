@@ -299,6 +299,12 @@ options:
       opacity:
         title: Độ mờ
         description: Điều chỉnh độ mờ của thanh công cụ chọn văn bản và cửa sổ mở rộng mở từ đó
+      theme:
+        title: Chủ đề Popup
+        description: Tùy chỉnh màu nền và màu chữ của thanh công cụ chọn. Để trống để sử dụng màu mặc định.
+        background: Màu nền
+        text: Màu chữ
+        reset: Đặt lại
       featureToggles:
         title: Bật/tắt tính năng
         description: Chọn các tính năng tích hợp để hiển thị trên thanh công cụ chọn văn bản

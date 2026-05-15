@@ -88,7 +88,7 @@ export async function mountSubtitlesUI(
     <ShadowWrapperContext value={reactContainer}>
       <SubtitlesProviders adapter={adapter}>
         <SubtitlesContainer />
-        <Toaster richColors className="z-2147483647 notranslate" />
+        <Toaster richColors className="z-[2147483647] notranslate" />
       </SubtitlesProviders>
     </ShadowWrapperContext>
   )

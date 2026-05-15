@@ -2,6 +2,7 @@ import { i18n } from "#imports"
 import selectionToolbarDemoImage from "@/assets/demo/selection-toolbar.png"
 import { GradientBackground } from "@/components/gradient-background"
 import { PageLayout } from "../../components/page-layout"
+import { SelectionToolbarTheme } from "./selection-toolbar-theme"
 import { SelectionToolbarDisabledSites } from "./selection-toolbar-disabled-sites"
 import { SelectionToolbarFeatureToggles } from "./selection-toolbar-feature-toggles"
 import { SelectionToolbarGlobalToggle } from "./selection-toolbar-global-toggle"
@@ -20,6 +21,7 @@ export function SelectionToolbarPage() {
       <div className="*:border-b [&>*:last-child]:border-b-0">
         <SelectionToolbarGlobalToggle />
         <SelectionToolbarOpacity />
+        <SelectionToolbarTheme />
         <SelectionToolbarFeatureToggles />
         <SelectionToolbarDisabledSites />
       </div>

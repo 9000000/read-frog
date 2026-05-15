@@ -343,7 +343,7 @@ export default function FloatingButton() {
       ref={containerRef}
       data-testid="floating-button-container"
       className={cn(
-        "fixed z-2147483647 flex flex-col gap-2 print:hidden",
+        "fixed z-[2147483647] flex flex-col gap-2 print:hidden",
         isDraggingButton
           ? "items-center"
           : floatingButtonSide === "right" ? "items-end" : "items-start",
@@ -476,7 +476,7 @@ function FloatingButtonCloseMenu({
       >
         <IconX className="h-3 w-3" strokeWidth={3} />
       </DropdownMenuTrigger>
-      <DropdownMenuContent container={shadowWrapper} align="start" side={side === "right" ? "left" : "right"} className="z-2147483647 w-fit! whitespace-nowrap">
+      <DropdownMenuContent container={shadowWrapper} align="start" side={side === "right" ? "left" : "right"} className="z-[2147483647] w-fit! whitespace-nowrap">
         <DropdownMenuItem
           onMouseDown={e => e.stopPropagation()}
           onClick={handleDisableForSite}

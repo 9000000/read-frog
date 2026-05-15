@@ -124,14 +124,14 @@ describe("selectionToolbar - isInputOrTextarea logic", () => {
   }
 
   const expectToolbarVisible = () => {
-    expect(document.querySelector(".absolute.z-2147483647")).toHaveClass("opacity-100")
+    expect(document.querySelector(".absolute.z-\\[2147483647\\]")).toHaveClass("opacity-100")
   }
 
   const expectToolbarHidden = () => {
-    expect(document.querySelector(".absolute.z-2147483647")).toHaveClass("opacity-0")
+    expect(document.querySelector(".absolute.z-\\[2147483647\\]")).toHaveClass("opacity-0")
   }
 
-  const getToolbar = () => document.querySelector(".absolute.z-2147483647") as HTMLElement | null
+  const getToolbar = () => document.querySelector(".absolute.z-\\[2147483647\\]") as HTMLElement | null
 
   const getToolbarSurface = () => document.querySelector("[data-slot='selection-toolbar-surface']") as HTMLElement | null
 
@@ -534,7 +534,7 @@ describe("selectionToolbar - isInputOrTextarea logic", () => {
       </div>,
     )
 
-    const toolbar = document.querySelector(".absolute.z-2147483647") as HTMLElement | null
+    const toolbar = document.querySelector(".absolute.z-\\[2147483647\\]") as HTMLElement | null
     if (!toolbar) {
       throw new Error("Selection toolbar is missing")
     }
@@ -649,7 +649,7 @@ describe("selectionToolbar - positioning logic", () => {
   }
 
   const getToolbarElement = () => {
-    return document.querySelector(".absolute.z-2147483647") as HTMLElement
+    return document.querySelector(".absolute.z-\\[2147483647\\]") as HTMLElement
   }
 
   const mockToolbarDimensions = (toolbar: HTMLElement, width: number, height: number) => {

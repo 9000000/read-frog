@@ -23,7 +23,6 @@ export function TranslationContent({
   const showStreamingIndicator = isTranslating && !thinking && translatedText
   return (
     <div className="p-4">
-      <SelectionSourceContent text={selectionContent} separatorClassName="mb-3" />
       <div className="space-y-2">
         {thinking && (
           <Thinking status={thinking.status} content={thinking.text} />

@@ -23,10 +23,11 @@ import { onMessage } from "@/utils/message"
 import { getTranslatePromptFromConfig } from "@/utils/prompts/translate"
 import { resolveModelId } from "@/utils/providers/model-id"
 import { getProviderOptionsWithOverride } from "@/utils/providers/options"
+import ProviderSelector from "@/components/llm-providers/provider-selector"
 import { shadowWrapper } from "../.."
+import { SELECTION_CONTENT_OVERLAY_LAYERS } from "../../overlay-layers"
 import { SelectionToolbarErrorAlert } from "../../components/selection-toolbar-error-alert"
-import { SelectionToolbarFooterContent } from "../../components/selection-toolbar-footer-content"
-import { SelectionToolbarTitleContent } from "../../components/selection-toolbar-title-content"
+import { ContextDetailsButton, RegenerateButton } from "../../components/selection-toolbar-footer-content"
 import {
   isSelectionToolbarVisibleAtom,
   selectionSessionAtom,
@@ -191,6 +192,7 @@ export function SelectionTranslationProvider({
   const selectionSession = useAtomValue(selectionSessionAtom)
   const translateRequest = useAtomValue(selectionToolbarTranslateRequestAtom)
   const providersConfig = useAtomValue(configFieldsAtomMap.providersConfig)
+  const selectionToolbarConfig = useAtomValue(configFieldsAtomMap.selectionToolbar)
   const setIsSelectionToolbarVisible = useSetAtom(isSelectionToolbarVisibleAtom)
   const setConfig = useSetAtom(writeConfigAtom)
   const abortControllerRef = useRef<AbortController | null>(null)
@@ -502,17 +504,28 @@ export function SelectionTranslationProvider({
           key={popoverSessionKey}
           container={shadowWrapper ?? document.body}
           finalFocus={false}
+          style={{ 
+            backgroundColor: selectionToolbarConfig.theme?.backgroundColor || 'var(--rf-popup-bg)', 
+            color: selectionToolbarConfig.theme?.textColor || 'var(--rf-popup-text)' 
+          }}
         >
-          <SelectionPopover.Header className="border-b">
-            <SelectionToolbarTitleContent
-              title="Translation"
-              icon="ri:translate"
-            />
-            <div className="flex items-center gap-1">
-              <TargetLanguageSelector />
-              <SelectionPopover.Pin />
-              <SelectionPopover.Close />
-            </div>
+          <SelectionPopover.Header className="flex flex-wrap items-center justify-between gap-1 border-b pb-2 pt-2 px-3">
+             <div className="flex items-center gap-1 min-w-0 flex-1">
+               <ProviderSelector
+                 providers={translateProviders}
+                 value={translateRequest.providerConfig?.id ?? ""}
+                 onChange={handleProviderChange}
+                 className="h-7 w-auto max-w-[130px] border-none bg-transparent shadow-none px-1"
+                 selectContentProps={{ container: shadowWrapper ?? undefined, positionerClassName: SELECTION_CONTENT_OVERLAY_LAYERS.popoverOverlay }}
+               />
+               <TargetLanguageSelector />
+             </div>
+             <div className="flex items-center gap-1 shrink-0">
+               <ContextDetailsButton titleText={titleText} paragraphsText={paragraphsText} />
+               <RegenerateButton onRegenerate={handleRegenerate} />
+               <SelectionPopover.Pin />
+               <SelectionPopover.Close />
+             </div>
           </SelectionPopover.Header>
 
           <SelectionPopover.Body>
@@ -524,16 +537,11 @@ export function SelectionTranslationProvider({
             />
             <SelectionToolbarErrorAlert error={error} className="-mt-3" />
           </SelectionPopover.Body>
-          <SelectionToolbarFooterContent
-            paragraphsText={paragraphsText}
-            providers={translateProviders}
-            titleText={titleText}
-            value={translateRequest.providerConfig?.id ?? ""}
-            onProviderChange={handleProviderChange}
-            onRegenerate={handleRegenerate}
-          />
         </SelectionPopover.Content>
       </SelectionPopover.Root>
     </SelectionTranslationContext>
   )
 }
+
+
+

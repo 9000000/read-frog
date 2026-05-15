@@ -300,6 +300,12 @@ options:
       opacity:
         title: Opacity
         description: Adjust the opacity of the selection toolbar and the expanded window opened from it
+      theme:
+        title: Popup Theme
+        description: Customize the background and text colors of the selection toolbar. Leave empty to use default colors.
+        background: Background Color
+        text: Text Color
+        reset: Reset
       featureToggles:
         title: Feature Toggles
         description: Choose which built-in features to show in the selection toolbar

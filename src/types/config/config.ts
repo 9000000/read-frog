@@ -37,6 +37,10 @@ const selectionToolbarSchema = z.object({
   opacity: z.number()
     .min(MIN_SELECTION_OVERLAY_OPACITY)
     .max(MAX_SELECTION_OVERLAY_OPACITY),
+  theme: z.object({
+    backgroundColor: z.string(),
+    textColor: z.string(),
+  }),
   features: z.object({
     translate: selectionToolbarFeatureSchema,
     speak: selectionToolbarSpeakFeatureSchema,
