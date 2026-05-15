@@ -39,6 +39,7 @@ import {
   isAbortError,
 } from "../inline-error"
 import { useSelectionContextMenuRequestResolver } from "../use-selection-context-menu-request"
+import { useSelectionPopoverThemeStyles } from "../use-selection-popover-theme-styles"
 import { TargetLanguageSelector } from "./target-language-selector"
 import { TranslationContent } from "./translation-content"
 
@@ -208,6 +209,7 @@ export function SelectionTranslationProvider({
     () => filterEnabledProvidersConfig(providersConfig).filter(isTranslateProviderConfig),
     [providersConfig],
   )
+  const themeStyles = useSelectionPopoverThemeStyles()
   const translateRequestKey = useMemo(
     () => JSON.stringify(translateRequest),
     [translateRequest],
@@ -504,10 +506,7 @@ export function SelectionTranslationProvider({
           key={popoverSessionKey}
           container={shadowWrapper ?? document.body}
           finalFocus={false}
-          style={{ 
-            backgroundColor: selectionToolbarConfig.theme?.backgroundColor || 'var(--rf-popup-bg)', 
-            color: selectionToolbarConfig.theme?.textColor || 'var(--rf-popup-text)' 
-          }}
+          style={themeStyles}
         >
           <SelectionPopover.Header className="flex flex-wrap items-center justify-between gap-1 border-b pb-2 pt-2 px-3">
              <div className="flex items-center gap-1 min-w-0 flex-1">

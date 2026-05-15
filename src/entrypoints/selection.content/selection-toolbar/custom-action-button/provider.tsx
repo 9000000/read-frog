@@ -23,6 +23,7 @@ import {
 } from "../atoms"
 import { createSelectionToolbarPrecheckError } from "../inline-error"
 import { useSelectionContextMenuRequestResolver } from "../use-selection-context-menu-request"
+import { useSelectionPopoverThemeStyles } from "../use-selection-popover-theme-styles"
 import { CustomActionContent } from "./custom-action-content"
 import { SaveToNotebaseButton } from "./save-to-notebase-button"
 import {
@@ -116,6 +117,7 @@ export function SelectionCustomActionProvider({
     () => filterEnabledProvidersConfig(providersConfig).filter(isLLMProviderConfig),
     [providersConfig],
   )
+  const themeStyles = useSelectionPopoverThemeStyles()
   const executionPlan = useMemo(
     () => buildCustomActionExecutionPlan(customActionRequest, cleanSelection, paragraphsText, webPageContext),
     [cleanSelection, customActionRequest, paragraphsText, webPageContext],
@@ -362,7 +364,7 @@ export function SelectionCustomActionProvider({
         anchor={anchor}
         onAnchorChange={setAnchor}
       >
-        <SelectionPopover.Content key={popoverSessionKey} container={shadowWrapper ?? document.body}>
+        <SelectionPopover.Content key={popoverSessionKey} container={shadowWrapper ?? document.body} style={themeStyles}>
           <SelectionPopover.Header className="border-b">
             <SelectionToolbarTitleContent
               title={activeAction?.name ?? "Custom Action"}
