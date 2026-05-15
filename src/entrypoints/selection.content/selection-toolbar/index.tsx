@@ -19,6 +19,7 @@ import { CloseButton, DropEvent } from "./close-button"
 import { SelectionToolbarCustomActionButtons } from "./custom-action-button"
 import { SpeakButton } from "./speak-button"
 import { TranslateButton } from "./translate-button"
+import { useSelectionPopoverThemeStyles } from "./use-selection-popover-theme-styles"
 
 enum SelectionDirection {
   TOP_LEFT = "TOP_LEFT",
@@ -228,6 +229,7 @@ export function SelectionToolbar() {
   const clearSelectionState = useSetAtom(clearSelectionStateAtom)
   const selectionToolbar = useAtomValue(configFieldsAtomMap.selectionToolbar)
   const dropdownOpenRef = useRef(false)
+  const themeStyles = useSelectionPopoverThemeStyles()
 
   const updatePosition = useCallback(() => {
     if (!isSelectionToolbarVisible || !tooltipRef.current || !selectionPositionRef.current)
@@ -451,7 +453,10 @@ export function SelectionToolbar() {
           <div
             data-slot="selection-toolbar-surface"
             className="bg-popover rounded-sm shadow-floating border border-border/50 flex items-center"
-            style={{ opacity: "var(--rf-selection-opacity, 1)" }}
+            style={{
+              opacity: "var(--rf-selection-opacity, 1)",
+              ...themeStyles,
+            }}
           >
             <div className="flex items-center overflow-x-auto overflow-y-hidden rounded-sm max-w-105 no-scrollbar">
               {features.translate.enabled && <TranslateButton />}
