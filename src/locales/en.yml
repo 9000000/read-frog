@@ -293,6 +293,11 @@ options:
         description: Choose the action when clicking the floating button
         panel: Open Side Panel
         translate: Toggle Page Translation
+      side:
+        title: Button Side
+        description: Choose which side of the page the floating button is docked to
+        left: Left
+        right: Right
     selectionToolbar:
       globalToggle:
         title: Enable Selection Toolbar
@@ -352,7 +357,17 @@ options:
           actions: Actions
         form:
           name: Name
-          icon: Icon (Iconify)
+          icon: Icon
+          iconField:
+            chooseAriaLabel: Choose icon
+            chooseTitle: Choose an icon
+            inputPlaceholder: Enter an icon name
+            helpAriaLabel: More icon help
+            helpTitle: Can't find the icon you want?
+            helpStepBrowsePrefix: "Browse icons on "
+            helpStepBrowseSuffix: ""
+            helpStepCopyPrefix: "Copy the icon name, for example "
+            helpStepCopySuffix: ", then paste it into the field."
           provider: Provider (requires structured output support)
           selectProvider: Select a provider
           systemPrompt: System Prompt
