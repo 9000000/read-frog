@@ -5,12 +5,15 @@ import { Thinking } from "@/components/thinking"
 import { CopyButton } from "../../components/copy-button"
 import { SelectionSourceContent } from "../../components/selection-source-content"
 import { SpeakButton } from "../../components/speak-button"
+import { QuickReplaceButton } from "../../components/quick-replace-button"
+import type { TargetInputElementInfo } from "../../selection-toolbar/atoms"
 
 interface TranslationContentProps {
   selectionContent: string | null | undefined
   translatedText: string | undefined
   isTranslating: boolean
   thinking: ThinkingSnapshot | null
+  targetInputElement?: TargetInputElementInfo | null
 }
 
 export function TranslationContent({
@@ -18,6 +21,7 @@ export function TranslationContent({
   translatedText,
   isTranslating,
   thinking,
+  targetInputElement,
 }: TranslationContentProps) {
   const showLoadingIndicator = isTranslating && !thinking && !translatedText
   const showStreamingIndicator = isTranslating && !thinking && translatedText
@@ -36,6 +40,7 @@ export function TranslationContent({
           <div className="flex items-center gap-1">
             <CopyButton text={translatedText} />
             <SpeakButton text={translatedText} />
+            <QuickReplaceButton text={translatedText} target={targetInputElement ?? null} />
           </div>
         </Activity>
       </div>

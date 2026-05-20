@@ -202,6 +202,14 @@ vi.mock("../../components/selection-toolbar-footer-content", () => ({
       </div>
     )
   },
+  ContextDetailsButton: ({ titleText, paragraphsText }: { titleText: string | null | undefined; paragraphsText: string | null | undefined }) => (
+    <div data-testid="context-details" data-title={titleText} data-paragraphs={paragraphsText} />
+  ),
+  RegenerateButton: ({ onRegenerate }: { onRegenerate: () => void }) => (
+    <button type="button" aria-label="Regenerate" onClick={onRegenerate}>
+      Regenerate
+    </button>
+  ),
 }))
 
 vi.mock("../translate-button/translation-content", () => ({
@@ -263,6 +271,14 @@ vi.mock("@/utils/logger", () => ({
 vi.mock("@/utils/message", () => ({
   onMessage: (...args: unknown[]) => onMessageMock(...args),
   sendMessage: vi.fn(),
+}))
+
+vi.mock("@/components/providers/theme-provider", () => ({
+  useTheme: () => ({
+    theme: "light",
+    themeMode: "light",
+    setThemeMode: vi.fn(),
+  }),
 }))
 
 function cloneConfig(config: Config): Config {
@@ -615,7 +631,7 @@ describe("selection toolbar requests", () => {
     await waitFor(() => {
       expect(screen.getByTestId("translation-result").textContent).toBe("Overlay panel content")
     })
-    expect(screen.getByTestId("footer-paragraphs").textContent).toBe("Original page paragraph with surrounding context.")
+    expect(screen.getByTestId("context-details").getAttribute("data-paragraphs")).toBe("Original page paragraph with surrounding context.")
 
     const overlayText = screen.getByTestId("translation-result")
     const overlaySelectionRange = createRangeFor(overlayText)
@@ -651,7 +667,7 @@ describe("selection toolbar requests", () => {
     expect(translateTextCoreMock.mock.calls[1]?.[0]).toMatchObject({
       text: "Original page selection",
     })
-    expect(screen.getByTestId("footer-paragraphs").textContent).toBe("Original page paragraph with surrounding context.")
+    expect(screen.getByTestId("context-details").getAttribute("data-paragraphs")).toBe("Original page paragraph with surrounding context.")
   })
 
   it("aborts llm translations when the popover closes without surfacing an error", async () => {
@@ -767,7 +783,7 @@ describe("selection toolbar requests", () => {
 
     const translationContent = screen.getByTestId("translation-content")
     expect(translationContent.compareDocumentPosition(alert) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
-    expect(alert.compareDocumentPosition(screen.getByRole("button", { name: "Change provider" })) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(screen.getByRole("button", { name: "Regenerate" })).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole("button", { name: "Regenerate" }))
 
@@ -922,8 +938,8 @@ describe("selection toolbar requests", () => {
     expect(screen.getByTestId("translation-selection").textContent).toBe(
       "As long as you're alive, there's no bad ending.",
     )
-    expect(screen.getByTestId("footer-paragraphs").textContent).toContain("As long as you're alive,")
-    expect(screen.getByTestId("footer-paragraphs").textContent).toContain("there's no bad ending.")
+    expect(screen.getByTestId("context-details").getAttribute("data-paragraphs")).toContain("As long as you're alive,")
+    expect(screen.getByTestId("context-details").getAttribute("data-paragraphs")).toContain("there's no bad ending.")
     expect(toastErrorMock).not.toHaveBeenCalled()
   })
 

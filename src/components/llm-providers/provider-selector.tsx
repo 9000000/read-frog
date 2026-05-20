@@ -96,9 +96,9 @@ function TranslateGroupedSelect({
     >
       <SelectTrigger className={className}>
         <SelectValue placeholder={placeholder}>
-          {(provider: ProviderConfig) => (
+          {(provider: ProviderConfig) => provider ? (
             <ProviderIcon logo={PROVIDER_ITEMS[provider.provider].logo(theme)} name={provider.name} size="sm" />
-          )}
+          ) : null}
         </SelectValue>
       </SelectTrigger>
       <SelectContent className="min-w-fit" {...selectContentProps}>
@@ -153,9 +153,9 @@ function FlatSelect({
     >
       <SelectTrigger className={className}>
         <SelectValue placeholder={placeholder}>
-          {(provider: ProviderConfig) => (
+          {(provider: ProviderConfig) => provider ? (
             <ProviderIcon logo={PROVIDER_ITEMS[provider.provider].logo(theme)} name={provider.name} size="sm" />
-          )}
+          ) : null}
         </SelectValue>
       </SelectTrigger>
       <SelectContent className="min-w-fit" {...selectContentProps}>

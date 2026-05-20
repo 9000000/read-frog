@@ -1,6 +1,7 @@
 import { i18n } from "#imports"
 import { PageLayout } from "../../components/page-layout"
 import { InputTranslationLanguages } from "./input-translation-languages"
+import { SecondaryTargetLanguage } from "./secondary-target-language"
 import { InputTranslationThreshold } from "./input-translation-threshold"
 import { InputTranslationToggle } from "./input-translation-toggle"
 
@@ -10,6 +11,7 @@ export function InputTranslationPage() {
       <div className="*:border-b [&>*:last-child]:border-b-0">
         <InputTranslationToggle />
         <InputTranslationLanguages />
+        <SecondaryTargetLanguage />
         <InputTranslationThreshold />
       </div>
     </PageLayout>

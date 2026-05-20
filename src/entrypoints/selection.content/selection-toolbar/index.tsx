@@ -10,10 +10,12 @@ import { MARGIN } from "@/utils/constants/selection"
 import { cn } from "@/utils/styles/utils"
 import { matchDomainPattern } from "@/utils/url"
 import { buildContextSnapshot, readSelectionSnapshot } from "../utils"
+import { isSlateElement } from "@/entrypoints/input-injector.content/editors/slate"
 import {
   clearSelectionStateAtom,
   isSelectionToolbarVisibleAtom,
   setSelectionStateAtom,
+  targetInputElementAtom,
 } from "./atoms"
 import { CloseButton, DropEvent } from "./close-button"
 import { SelectionToolbarCustomActionButtons } from "./custom-action-button"
@@ -227,6 +229,7 @@ export function SelectionToolbar() {
   const [isSelectionToolbarVisible, setIsSelectionToolbarVisible] = useAtom(isSelectionToolbarVisibleAtom)
   const setSelectionState = useSetAtom(setSelectionStateAtom)
   const clearSelectionState = useSetAtom(clearSelectionStateAtom)
+  const setTargetInputElement = useSetAtom(targetInputElementAtom)
   const selectionToolbar = useAtomValue(configFieldsAtomMap.selectionToolbar)
   const dropdownOpenRef = useRef(false)
   const themeStyles = useSelectionPopoverThemeStyles()
@@ -313,6 +316,38 @@ export function SelectionToolbar() {
             selection: selectionSnapshot,
             context: buildContextSnapshot(selectionSnapshot),
           })
+
+          const activeEl = document.activeElement as HTMLElement
+          const editableEl = activeEl ? (activeEl.closest('[contenteditable="true"]') as HTMLElement) || activeEl : null
+          const isEditable = editableEl && (
+            editableEl instanceof HTMLInputElement ||
+            editableEl instanceof HTMLTextAreaElement ||
+            editableEl.isContentEditable
+          )
+
+          if (isEditable) {
+            const isInput = editableEl instanceof HTMLInputElement || editableEl instanceof HTMLTextAreaElement
+            const info: any = {
+              element: editableEl,
+              isContentEditable: editableEl.isContentEditable,
+              isSlate: editableEl.isContentEditable && isSlateElement(editableEl),
+            }
+
+            if (isInput) {
+              const inputEl = editableEl as HTMLInputElement | HTMLTextAreaElement
+              info.selectionStart = inputEl.selectionStart ?? undefined
+              info.selectionEnd = inputEl.selectionEnd ?? undefined
+            } else {
+              const sel = window.getSelection()
+              if (sel && sel.rangeCount > 0) {
+                info.range = sel.getRangeAt(0).cloneRange()
+              }
+            }
+            setTargetInputElement(info)
+          } else {
+            setTargetInputElement(null)
+          }
+
           // calculate the position relative to the document
           const scrollY = window.scrollY
           const scrollX = window.scrollX

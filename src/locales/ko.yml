@@ -874,6 +874,8 @@ speak:
 action:
   copy: 복사
   copied: 복사됨
+  quickReplace: 빠른 교체
+  quickReplaced: 교체됨!
   regenerate: 다시 생성
   viewContextDetails: 컨텍스트
   saveToNotebase: Notebase에 저장

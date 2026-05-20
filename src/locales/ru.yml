@@ -874,6 +874,8 @@ speak:
 action:
   copy: Копировать
   copied: Скопировано
+  quickReplace: Быстрая замена
+  quickReplaced: Заменено!
   regenerate: Сгенерировать заново
   viewContextDetails: Контекст
   saveToNotebase: Сохранить в Notebase

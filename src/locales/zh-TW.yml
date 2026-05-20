@@ -874,6 +874,8 @@ speak:
 action:
   copy: 複製
   copied: 已複製
+  quickReplace: 快速替換
+  quickReplaced: 已替換！
   regenerate: 重新生成
   viewContextDetails: 上下文
   saveToNotebase: 儲存到筆記庫

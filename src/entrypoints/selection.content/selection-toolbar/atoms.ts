@@ -74,10 +74,22 @@ export const setSelectionStateAtom = atom(
   },
 )
 
+export interface TargetInputElementInfo {
+  element: HTMLElement
+  selectionStart?: number
+  selectionEnd?: number
+  range?: Range
+  isContentEditable: boolean
+  isSlate: boolean
+}
+
+export const targetInputElementAtom = atom<TargetInputElementInfo | null>(null)
+
 export const clearSelectionStateAtom = atom(
   null,
   (_get, set) => {
     set(selectionSessionAtom, null)
+    set(targetInputElementAtom, null)
   },
 )
 

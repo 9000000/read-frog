@@ -667,6 +667,9 @@ options:
             syntaxError: CSS has syntax errors
             tooLong: CSS is too long
             saved: All changes saved
+    secondaryTargetLanguage:
+      title: Secondary Target Language
+      description: "When translating text, if the detected source language matches the primary target language, the system will automatically translate to this language instead."
     translationMode:
       title: Translation Mode
       description: "Choose how the translated text is displayed: bilingual or translation only."
@@ -995,6 +998,8 @@ speak:
 action:
   copy: Copy
   copied: Copied
+  quickReplace: Quick Replace
+  quickReplaced: Replaced!
   regenerate: Regenerate
   viewContextDetails: Context
   saveToNotebase: Save to Notebase

@@ -874,6 +874,8 @@ speak:
 action:
   copy: コピー
   copied: コピー済み
+  quickReplace: クイック置換
+  quickReplaced: 置換完了！
   regenerate: 再生成
   viewContextDetails: コンテキスト
   saveToNotebase: Notebase に保存

@@ -7,6 +7,9 @@ import { LANG_CODE_TO_EN_NAME } from "@read-frog/definitions"
 import { useAtomValue, useSetAtom } from "jotai"
 import { createContext, use, useCallback, useEffect, useEffectEvent, useMemo, useRef, useState } from "react"
 import { toast } from "sonner"
+import { Icon } from "@iconify/react"
+import { Button } from "@/components/ui/base-ui/button"
+import { detectLanguage } from "@/utils/content/language"
 import { SelectionPopover } from "@/components/ui/selection-popover"
 import { ANALYTICS_FEATURE, ANALYTICS_SURFACE } from "@/types/analytics"
 import { isLLMProviderConfig, isTranslateProviderConfig } from "@/types/config/provider"
@@ -32,6 +35,7 @@ import {
   isSelectionToolbarVisibleAtom,
   selectionSessionAtom,
   selectionToolbarTranslateRequestAtom,
+  targetInputElementAtom,
 } from "../atoms"
 import {
   createSelectionToolbarPrecheckError,
@@ -42,6 +46,7 @@ import { useSelectionContextMenuRequestResolver } from "../use-selection-context
 import { useSelectionPopoverThemeStyles } from "../use-selection-popover-theme-styles"
 import { TargetLanguageSelector } from "./target-language-selector"
 import { TranslationContent } from "./translation-content"
+import { i18n, storage } from "#imports"
 
 interface SelectionTranslatePendingOpenRequest {
   anchor?: { x: number, y: number }
@@ -190,17 +195,20 @@ export function SelectionTranslationProvider({
     typeof ANALYTICS_SURFACE.SELECTION_TOOLBAR | typeof ANALYTICS_SURFACE.CONTEXT_MENU
   >(ANALYTICS_SURFACE.SELECTION_TOOLBAR)
   const [activeSession, setActiveSession] = useState<SelectionSession | null>(null)
+  const [lastTargetLang, setLastTargetLang] = useState<string | null>(null)
   const selectionSession = useAtomValue(selectionSessionAtom)
   const translateRequest = useAtomValue(selectionToolbarTranslateRequestAtom)
   const providersConfig = useAtomValue(configFieldsAtomMap.providersConfig)
   const selectionToolbarConfig = useAtomValue(configFieldsAtomMap.selectionToolbar)
   const setIsSelectionToolbarVisible = useSetAtom(isSelectionToolbarVisibleAtom)
   const setConfig = useSetAtom(writeConfigAtom)
+  const targetInputElement = useAtomValue(targetInputElementAtom)
   const abortControllerRef = useRef<AbortController | null>(null)
   const pendingOpenRequestRef = useRef<SelectionTranslatePendingOpenRequest | null>(null)
   const reopenFrameRef = useRef<number | null>(null)
   const lastTranslationRunKeyRef = useRef<string | null>(null)
   const runIdRef = useRef(0)
+  const originalTargetLangRef = useRef<string | null>(null)
   const { resolveContextMenuSelectionRequest } = useSelectionContextMenuRequestResolver(selectionSession)
   const selectionText = activeSession?.selectionSnapshot.text ?? null
   const paragraphsText = activeSession?.contextSnapshot.text ?? selectionText
@@ -228,6 +236,72 @@ export function SelectionTranslationProvider({
     setThinking(null)
     setError(null)
   }, [])
+
+  const handleSwapLanguages = useCallback(async () => {
+    if (!selectionText) {
+      return
+    }
+
+    const currentTarget = translateRequest.language.targetCode
+
+    setIsTranslating(true)
+    setError(null)
+
+    try {
+      // Detect source language using basic detection (no LLM for fast swap)
+      const detected = await detectLanguage(selectionText, {
+        minLength: 1,
+        enableLLM: false,
+      })
+
+      if (!detected) {
+        toast.error("Could not detect source language.")
+        setIsTranslating(false)
+        return
+      }
+
+      let newTarget: string
+      if (currentTarget !== detected) {
+        newTarget = detected
+        setLastTargetLang(currentTarget)
+      } else if (lastTargetLang) {
+        newTarget = lastTargetLang
+        setLastTargetLang(currentTarget)
+      } else {
+        newTarget = detected === "vie" ? "eng" : "vie"
+        setLastTargetLang(currentTarget)
+      }
+
+      // If translated text is available, swap input text and translation output!
+      if (translatedText && translatedText.trim() !== "") {
+        setActiveSession(prev => {
+          if (!prev) return null
+          return {
+            ...prev,
+            selectionSnapshot: {
+              ...prev.selectionSnapshot,
+              text: translatedText,
+            },
+            contextSnapshot: {
+              text: translatedText,
+              paragraphs: [translatedText],
+            }
+          }
+        })
+      }
+
+      void setConfig({
+        language: {
+          ...translateRequest.language,
+          targetCode: newTarget as any,
+        }
+      })
+    } catch (err) {
+      console.error("Failed to swap languages:", err)
+      toast.error("Failed to swap translation languages.")
+      setIsTranslating(false)
+    }
+  }, [selectionText, translateRequest.language, lastTargetLang, translatedText, setConfig])
 
   const cancelCurrentTranslation = useCallback((runId?: number) => {
     if (runId !== undefined && runIdRef.current !== runId) {
@@ -270,11 +344,7 @@ export function SelectionTranslationProvider({
       sourceSurface,
     )
 
-    setIsTranslating(true)
-    setTranslatedText(undefined)
-    setThinking(null)
-    setError(null)
-
+    // Prechecks đồng bộ cần chạy ngay lập tức trước khi có bất kỳ thao tác bất đồng bộ nào
     const providerConfig = translateRequest.providerConfig
     if (!providerConfig || !isTranslateProviderConfig(providerConfig)) {
       if (runIdRef.current === runId) {
@@ -298,6 +368,36 @@ export function SelectionTranslationProvider({
         outcome: "failure",
       })
       return
+    }
+
+    setIsTranslating(true)
+    setTranslatedText(undefined)
+    setThinking(null)
+    setError(null)
+
+    // Tự động nhận diện ngôn ngữ nguồn để xử lý ngôn ngữ đích thứ hai
+    try {
+      const detected = await detectLanguage(preparedText, {
+        minLength: 1,
+        enableLLM: false,
+      })
+
+      if (detected && detected === translateRequest.language.targetCode) {
+        const storedSecondary = await storage.getItem<LangCodeISO6393>("local:secondary-target-lang")
+        const secondaryTarget = storedSecondary || (detected === "vie" ? "eng" : "vie")
+
+        if (secondaryTarget !== translateRequest.language.targetCode) {
+          void setConfig({
+            language: {
+              ...translateRequest.language,
+              targetCode: secondaryTarget as any,
+            }
+          })
+          return
+        }
+      }
+    } catch (err) {
+      console.error("Failed to detect language for secondary target check:", err)
     }
 
     try {
@@ -365,7 +465,7 @@ export function SelectionTranslationProvider({
         setIsTranslating(false)
       }
     }
-  }, [resetTranslationState, selectionText, sourceSurface, translateRequest])
+  }, [resetTranslationState, selectionText, sourceSurface, translateRequest, setConfig])
 
   const startTranslation = useEffectEvent((runId: number) => {
     void runTranslation(runId)
@@ -402,6 +502,8 @@ export function SelectionTranslationProvider({
     resetTranslationState()
 
     if (nextOpen) {
+      originalTargetLangRef.current = translateRequest.language.targetCode
+
       const pendingRequest = pendingOpenRequestRef.current
       const nextSession = pendingRequest?.session ?? selectionSession
 
@@ -415,6 +517,16 @@ export function SelectionTranslationProvider({
       pendingOpenRequestRef.current = null
     }
     else {
+      if (originalTargetLangRef.current && translateRequest.language.targetCode !== originalTargetLangRef.current) {
+        void setConfig({
+          language: {
+            ...translateRequest.language,
+            targetCode: originalTargetLangRef.current as any,
+          }
+        })
+      }
+      originalTargetLangRef.current = null
+
       resetPopoverSession({
         clearAnchor: pendingOpenRequestRef.current === null,
       })
@@ -422,7 +534,7 @@ export function SelectionTranslationProvider({
     }
 
     setIsOpen(nextOpen)
-  }, [cancelCurrentTranslation, resetPopoverSession, resetTranslationState, selectionSession, setIsSelectionToolbarVisible])
+  }, [cancelCurrentTranslation, resetPopoverSession, resetTranslationState, selectionSession, setIsSelectionToolbarVisible, translateRequest.language, setConfig])
 
   const prepareToolbarOpen = useCallback(() => {
     if (!selectionSession) {
@@ -476,6 +588,27 @@ export function SelectionTranslationProvider({
   }, [commitOpenRequest, handleOpenChange, isOpen, resolveContextMenuRequest])
 
   useEffect(() => {
+    if (!isOpen || !originalTargetLangRef.current || !selectionText) {
+      return
+    }
+
+    const currentTarget = translateRequest.language.targetCode
+    const originalTarget = originalTargetLangRef.current
+
+    if (currentTarget !== originalTarget) {
+      void detectLanguage(selectionText, { minLength: 1, enableLLM: false }).then(detected => {
+        if (detected === originalTarget) {
+          void storage.setItem("local:secondary-target-lang", currentTarget)
+        } else {
+          originalTargetLangRef.current = currentTarget
+        }
+      }).catch(err => {
+        console.error("Error in target language watch effect:", err)
+      })
+    }
+  }, [translateRequest.language.targetCode, isOpen, selectionText])
+
+  useEffect(() => {
     return onMessage("openSelectionTranslationFromContextMenu", () => {
       openFromContextMenu()
     })
@@ -518,6 +651,16 @@ export function SelectionTranslationProvider({
                  selectContentProps={{ container: shadowWrapper ?? undefined, positionerClassName: SELECTION_CONTENT_OVERLAY_LAYERS.popoverOverlay }}
                />
                <TargetLanguageSelector />
+               <Button
+                 variant="ghost-secondary"
+                 size="icon"
+                 className="h-7 w-7 shrink-0"
+                 onClick={handleSwapLanguages}
+                 title={i18n.t("translationHub.exchangeLanguages")}
+                 data-rf-no-drag
+               >
+                 <Icon icon="tabler:arrows-exchange" className="size-4" />
+               </Button>
              </div>
              <div className="flex items-center gap-1 shrink-0">
                <ContextDetailsButton titleText={titleText} paragraphsText={paragraphsText} />
@@ -533,6 +676,7 @@ export function SelectionTranslationProvider({
               translatedText={translatedText}
               isTranslating={isTranslating}
               thinking={thinking}
+              targetInputElement={targetInputElement}
             />
             <SelectionToolbarErrorAlert error={error} className="-mt-3" />
           </SelectionPopover.Body>

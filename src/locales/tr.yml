@@ -874,6 +874,8 @@ speak:
 action:
   copy: Kopyala
   copied: Kopyalandı
+  quickReplace: Hızlı Değiştir
+  quickReplaced: Değiştirildi!
   regenerate: Yeniden oluştur
   viewContextDetails: Bağlam
   saveToNotebase: Notebase'e Kaydet

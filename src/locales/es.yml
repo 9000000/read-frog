@@ -989,6 +989,8 @@ speak:
 action:
   copy: Copiar
   copied: Copiado
+  quickReplace: Reemplazo rápido
+  quickReplaced: ¡Reemplazado!
   regenerate: Regenerar
   viewContextDetails: Contexto
   saveToNotebase: Guardar en Notebase

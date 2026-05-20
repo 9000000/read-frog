@@ -552,6 +552,9 @@ options:
             syntaxError: CSS có lỗi cú pháp
             tooLong: CSS quá dài
             saved: Tất cả thay đổi đã được lưu
+    secondaryTargetLanguage:
+      title: Ngôn ngữ đích thứ hai
+      description: "Khi dịch văn bản, nếu ngôn ngữ nguồn phát hiện trùng với ngôn ngữ đích chính, hệ thống sẽ tự động dịch sang ngôn ngữ này."
     translationMode:
       title: Chế độ dịch
       description: "Chọn cách hiển thị văn bản đã dịch: song ngữ hoặc chỉ bản dịch."
@@ -880,6 +883,8 @@ speak:
 action:
   copy: Sao chép
   copied: Đã sao chép
+  quickReplace: Thay thế nhanh
+  quickReplaced: Đã thay thế!
   regenerate: Tạo lại
   viewContextDetails: Ngữ cảnh
   saveToNotebase: Lưu vào Notebase
