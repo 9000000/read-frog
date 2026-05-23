@@ -161,6 +161,8 @@ async function translateWithStandardProvider({
 
 interface SelectionTranslationContextValue {
   prepareToolbarOpen: () => void
+  targetLang: LangCodeISO6393 | null
+  setTargetLang: (lang: LangCodeISO6393) => void
 }
 
 const SelectionTranslationContext = createContext<SelectionTranslationContextValue | null>(null)
@@ -196,6 +198,7 @@ export function SelectionTranslationProvider({
   >(ANALYTICS_SURFACE.SELECTION_TOOLBAR)
   const [activeSession, setActiveSession] = useState<SelectionSession | null>(null)
   const [lastTargetLang, setLastTargetLang] = useState<string | null>(null)
+  const [targetLang, setTargetLang] = useState<LangCodeISO6393 | null>(null)
   const selectionSession = useAtomValue(selectionSessionAtom)
   const translateRequest = useAtomValue(selectionToolbarTranslateRequestAtom)
   const providersConfig = useAtomValue(configFieldsAtomMap.providersConfig)
@@ -208,7 +211,7 @@ export function SelectionTranslationProvider({
   const reopenFrameRef = useRef<number | null>(null)
   const lastTranslationRunKeyRef = useRef<string | null>(null)
   const runIdRef = useRef(0)
-  const originalTargetLangRef = useRef<string | null>(null)
+  const translationHistoryRef = useRef<Map<string, string>>(new Map())
   const { resolveContextMenuSelectionRequest } = useSelectionContextMenuRequestResolver(selectionSession)
   const selectionText = activeSession?.selectionSnapshot.text ?? null
   const paragraphsText = activeSession?.contextSnapshot.text ?? selectionText
@@ -238,11 +241,11 @@ export function SelectionTranslationProvider({
   }, [])
 
   const handleSwapLanguages = useCallback(async () => {
-    if (!selectionText) {
+    if (!selectionText || !targetLang) {
       return
     }
 
-    const currentTarget = translateRequest.language.targetCode
+    const currentTarget = targetLang
 
     setIsTranslating(true)
     setError(null)
@@ -290,18 +293,13 @@ export function SelectionTranslationProvider({
         })
       }
 
-      void setConfig({
-        language: {
-          ...translateRequest.language,
-          targetCode: newTarget as any,
-        }
-      })
+      setTargetLang(newTarget as LangCodeISO6393)
     } catch (err) {
       console.error("Failed to swap languages:", err)
       toast.error("Failed to swap translation languages.")
       setIsTranslating(false)
     }
-  }, [selectionText, translateRequest.language, lastTargetLang, translatedText, setConfig])
+  }, [selectionText, targetLang, lastTargetLang, translatedText])
 
   const cancelCurrentTranslation = useCallback((runId?: number) => {
     if (runId !== undefined && runIdRef.current !== runId) {
@@ -329,7 +327,7 @@ export function SelectionTranslationProvider({
     setRerunNonce(prev => prev + 1)
   }, [cancelCurrentTranslation])
 
-  const runTranslation = useCallback(async (runId: number) => {
+  const runTranslation = useCallback(async (runId: number, currentTargetLang: LangCodeISO6393) => {
     const preparedText = prepareTranslationText(selectionText)
 
     if (preparedText === "") {
@@ -370,29 +368,42 @@ export function SelectionTranslationProvider({
       return
     }
 
+    const providerId = providerConfig?.id ?? ""
+    const cachedTranslation = translationHistoryRef.current.get(`${preparedText}::${currentTargetLang}::${providerId}`)
+    if (cachedTranslation !== undefined) {
+      if (runIdRef.current === runId) {
+        setTranslatedText(cachedTranslation)
+        setThinking(null)
+        setError(null)
+        setIsTranslating(false)
+      }
+      void trackFeatureUsed({
+        ...analyticsContext,
+        outcome: "success",
+      })
+      return
+    }
+
     setIsTranslating(true)
     setTranslatedText(undefined)
     setThinking(null)
     setError(null)
 
+    let detectedSourceLang: string | null = null
     // Tự động nhận diện ngôn ngữ nguồn để xử lý ngôn ngữ đích thứ hai
     try {
       const detected = await detectLanguage(preparedText, {
         minLength: 1,
         enableLLM: false,
       })
+      detectedSourceLang = detected
 
-      if (detected && detected === translateRequest.language.targetCode) {
+      if (detected && detected === currentTargetLang) {
         const storedSecondary = await storage.getItem<LangCodeISO6393>("local:secondary-target-lang")
         const secondaryTarget = storedSecondary || (detected === "vie" ? "eng" : "vie")
 
-        if (secondaryTarget !== translateRequest.language.targetCode) {
-          void setConfig({
-            language: {
-              ...translateRequest.language,
-              targetCode: secondaryTarget as any,
-            }
-          })
+        if (secondaryTarget !== currentTargetLang) {
+          setTargetLang(secondaryTarget as LangCodeISO6393)
           return
         }
       }
@@ -402,6 +413,13 @@ export function SelectionTranslationProvider({
 
     try {
       let nextTranslatedText = ""
+      const translateRequestWithTarget = {
+        ...translateRequest,
+        language: {
+          ...translateRequest.language,
+          targetCode: currentTargetLang,
+        },
+      }
       if (isLLMProviderConfig(providerConfig)) {
         setThinking({
           status: "thinking",
@@ -411,7 +429,7 @@ export function SelectionTranslationProvider({
         const nextSnapshot = await translateWithLlm({
           preparedText,
           providerConfig,
-          translateRequest,
+          translateRequest: translateRequestWithTarget,
           onChunk: (data) => {
             if (runIdRef.current === runId) {
               setTranslatedText(data.output)
@@ -433,12 +451,19 @@ export function SelectionTranslationProvider({
         nextTranslatedText = await translateWithStandardProvider({
           text: preparedText,
           providerConfig,
-          translateRequest,
+          translateRequest: translateRequestWithTarget,
         })
       }
 
       if (runIdRef.current === runId) {
         setTranslatedText(nextTranslatedText)
+        if (nextTranslatedText && nextTranslatedText.trim() !== "") {
+          const providerId = providerConfig?.id ?? ""
+          translationHistoryRef.current.set(`${preparedText}::${currentTargetLang}::${providerId}`, nextTranslatedText)
+          if (detectedSourceLang) {
+            translationHistoryRef.current.set(`${nextTranslatedText}::${detectedSourceLang}::${providerId}`, preparedText)
+          }
+        }
       }
 
       void trackFeatureUsed({
@@ -465,14 +490,14 @@ export function SelectionTranslationProvider({
         setIsTranslating(false)
       }
     }
-  }, [resetTranslationState, selectionText, sourceSurface, translateRequest, setConfig])
+  }, [resetTranslationState, selectionText, sourceSurface, translateRequest])
 
-  const startTranslation = useEffectEvent((runId: number) => {
-    void runTranslation(runId)
+  const startTranslation = useEffectEvent((runId: number, currentTargetLang: LangCodeISO6393) => {
+    void runTranslation(runId, currentTargetLang)
   })
 
   useEffect(() => {
-    if (!isOpen) {
+    if (!isOpen || !targetLang) {
       return
     }
 
@@ -481,6 +506,7 @@ export function SelectionTranslationProvider({
       rerunNonce,
       sessionId: activeSession?.id ?? null,
       translateRequestKey,
+      targetLang,
     })
     if (lastTranslationRunKeyRef.current === nextRunKey) {
       return
@@ -490,20 +516,19 @@ export function SelectionTranslationProvider({
     const runId = runIdRef.current + 1
     runIdRef.current = runId
 
-    startTranslation(runId)
+    startTranslation(runId, targetLang)
 
     return () => {
       cancelCurrentTranslation(runId)
     }
-  }, [activeSession?.id, cancelCurrentTranslation, isOpen, popoverSessionKey, rerunNonce, translateRequestKey])
+  }, [activeSession?.id, cancelCurrentTranslation, isOpen, popoverSessionKey, rerunNonce, translateRequestKey, targetLang])
 
   const handleOpenChange = useCallback((nextOpen: boolean) => {
     cancelCurrentTranslation()
     resetTranslationState()
+    translationHistoryRef.current.clear()
 
     if (nextOpen) {
-      originalTargetLangRef.current = translateRequest.language.targetCode
-
       const pendingRequest = pendingOpenRequestRef.current
       const nextSession = pendingRequest?.session ?? selectionSession
 
@@ -515,18 +540,11 @@ export function SelectionTranslationProvider({
       }
       setIsSelectionToolbarVisible(false)
       pendingOpenRequestRef.current = null
+
+      setTargetLang(translateRequest.language.targetCode)
     }
     else {
-      if (originalTargetLangRef.current && translateRequest.language.targetCode !== originalTargetLangRef.current) {
-        void setConfig({
-          language: {
-            ...translateRequest.language,
-            targetCode: originalTargetLangRef.current as any,
-          }
-        })
-      }
-      originalTargetLangRef.current = null
-
+      setTargetLang(null)
       resetPopoverSession({
         clearAnchor: pendingOpenRequestRef.current === null,
       })
@@ -534,7 +552,7 @@ export function SelectionTranslationProvider({
     }
 
     setIsOpen(nextOpen)
-  }, [cancelCurrentTranslation, resetPopoverSession, resetTranslationState, selectionSession, setIsSelectionToolbarVisible, translateRequest.language, setConfig])
+  }, [cancelCurrentTranslation, resetPopoverSession, resetTranslationState, selectionSession, setIsSelectionToolbarVisible, translateRequest.language])
 
   const prepareToolbarOpen = useCallback(() => {
     if (!selectionSession) {
@@ -588,25 +606,23 @@ export function SelectionTranslationProvider({
   }, [commitOpenRequest, handleOpenChange, isOpen, resolveContextMenuRequest])
 
   useEffect(() => {
-    if (!isOpen || !originalTargetLangRef.current || !selectionText) {
+    if (!isOpen || !translateRequest.language.targetCode || !targetLang || !selectionText) {
       return
     }
 
-    const currentTarget = translateRequest.language.targetCode
-    const originalTarget = originalTargetLangRef.current
+    const currentTarget = targetLang
+    const originalTarget = translateRequest.language.targetCode
 
     if (currentTarget !== originalTarget) {
       void detectLanguage(selectionText, { minLength: 1, enableLLM: false }).then(detected => {
         if (detected === originalTarget) {
           void storage.setItem("local:secondary-target-lang", currentTarget)
-        } else {
-          originalTargetLangRef.current = currentTarget
         }
       }).catch(err => {
         console.error("Error in target language watch effect:", err)
       })
     }
-  }, [translateRequest.language.targetCode, isOpen, selectionText])
+  }, [targetLang, isOpen, selectionText, translateRequest.language.targetCode])
 
   useEffect(() => {
     return onMessage("openSelectionTranslationFromContextMenu", () => {
@@ -624,7 +640,9 @@ export function SelectionTranslationProvider({
 
   const contextValue = useMemo<SelectionTranslationContextValue>(() => ({
     prepareToolbarOpen,
-  }), [prepareToolbarOpen])
+    targetLang,
+    setTargetLang,
+  }), [prepareToolbarOpen, targetLang])
 
   return (
     <SelectionTranslationContext value={contextValue}>

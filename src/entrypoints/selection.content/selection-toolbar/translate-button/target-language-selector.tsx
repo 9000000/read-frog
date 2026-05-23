@@ -1,6 +1,5 @@
 import { Combobox as ComboboxPrimitive } from "@base-ui/react"
 import { IconChevronDown } from "@tabler/icons-react"
-import { useAtom } from "jotai"
 import { useMemo } from "react"
 import { i18n } from "#imports"
 import { filterLanguage, getTargetLanguageItems } from "@/components/language-combobox-options"
@@ -14,15 +13,15 @@ import {
   ComboboxList,
 } from "@/components/ui/base-ui/combobox"
 import { useSelectionPopoverOverlayProps } from "@/components/ui/selection-popover"
-import { configFieldsAtomMap } from "@/utils/atoms/config"
+import { useSelectionTranslationPopover } from "./provider"
 
 export function TargetLanguageSelector() {
-  const [language, setLanguage] = useAtom(configFieldsAtomMap.language)
+  const { targetLang, setTargetLang } = useSelectionTranslationPopover()
   const popoverOverlay = useSelectionPopoverOverlayProps()
   const languageItems = useMemo(() => getTargetLanguageItems(), [])
   const currentItem = useMemo(
-    () => languageItems.find(item => item.value === language.targetCode) ?? null,
-    [language.targetCode, languageItems],
+    () => languageItems.find(item => item.value === targetLang) ?? null,
+    [targetLang, languageItems],
   )
   const title = currentItem?.label ?? i18n.t("side.targetLang")
 
@@ -30,11 +29,11 @@ export function TargetLanguageSelector() {
     <Combobox
       value={currentItem}
       onValueChange={(item) => {
-        if (!item || item.value === "auto" || item.value === language.targetCode) {
+        if (!item || item.value === "auto" || item.value === targetLang) {
           return
         }
 
-        void setLanguage({ targetCode: item.value })
+        setTargetLang(item.value)
       }}
       items={languageItems}
       filter={filterLanguage}
