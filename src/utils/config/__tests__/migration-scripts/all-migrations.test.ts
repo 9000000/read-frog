@@ -20,10 +20,7 @@ describe("all Config Migrations", () => {
     // Test all configs in the test series
     for (const [seriesId, seriesData] of Object.entries(latestExampleModule.testSeries)) {
       const parseResult = configSchema.safeParse((seriesData).config)
-      if (!parseResult.success) {
-        console.error(`Schema validation failed for series "${seriesId}":`, parseResult.error.issues)
-      }
-      expect(parseResult.success).toBe(true)
+      expect(parseResult.success, `Validation failed for series "${seriesId}": ${JSON.stringify(parseResult.error?.issues, null, 2)}`).toBe(true)
     }
   })
 

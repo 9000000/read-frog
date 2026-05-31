@@ -40,6 +40,9 @@ const selectionToolbarSchema = z.object({
   theme: z.object({
     backgroundColor: z.string(),
     textColor: z.string(),
+  }).default({
+    backgroundColor: "",
+    textColor: "",
   }),
   features: z.object({
     translate: selectionToolbarFeatureSchema,

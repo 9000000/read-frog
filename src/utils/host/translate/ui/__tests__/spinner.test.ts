@@ -12,6 +12,7 @@ vi.mock("@/utils/host/translate/ui/style-injector", () => ({
 
 describe("spinner", () => {
   beforeEach(() => {
+    vi.resetModules()
     document.head.innerHTML = ""
     document.body.innerHTML = ""
     ensurePresetStylesMock.mockReset()
