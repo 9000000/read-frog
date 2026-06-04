@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 
 import { beforeEach, describe, expect, it, vi } from "vitest"
+import { createSpinnerInside, createLightweightSpinner } from "../spinner"
 
 const { ensurePresetStylesMock } = vi.hoisted(() => ({
   ensurePresetStylesMock: vi.fn(),
@@ -12,14 +13,12 @@ vi.mock("@/utils/host/translate/ui/style-injector", () => ({
 
 describe("spinner", () => {
   beforeEach(() => {
-    vi.resetModules()
     document.head.innerHTML = ""
     document.body.innerHTML = ""
     ensurePresetStylesMock.mockReset()
-    vi.restoreAllMocks()
   })
 
-  it("ensures preset styles on the document before appending the spinner", async () => {
+  it("ensures preset styles on the document before appending the spinner", () => {
     const wrapper = document.createElement("span")
     document.body.appendChild(wrapper)
 
@@ -32,7 +31,6 @@ describe("spinner", () => {
       document.head.appendChild(style)
     })
 
-    const { createSpinnerInside } = await import("../spinner")
     const spinner = createSpinnerInside(wrapper)
 
     expect(ensurePresetStylesMock).toHaveBeenCalledOnce()
@@ -41,7 +39,7 @@ describe("spinner", () => {
     expect(spinner.className).toBe("read-frog-spinner")
   })
 
-  it("ensures preset styles on the containing shadow root before appending the spinner", async () => {
+  it("ensures preset styles on the containing shadow root before appending the spinner", () => {
     const host = document.createElement("div")
     const shadow = host.attachShadow({ mode: "open" })
     const wrapper = document.createElement("span")
@@ -56,7 +54,6 @@ describe("spinner", () => {
       shadow.appendChild(style)
     })
 
-    const { createSpinnerInside } = await import("../spinner")
     const spinner = createSpinnerInside(wrapper)
 
     expect(ensurePresetStylesMock).toHaveBeenCalledOnce()
@@ -65,8 +62,7 @@ describe("spinner", () => {
     expect(spinner.className).toBe("read-frog-spinner")
   })
 
-  it("uses a thin gray spinner arc without a background ring", async () => {
-    const { createLightweightSpinner } = await import("../spinner")
+  it("uses a thin gray spinner arc without a background ring", () => {
     const spinner = createLightweightSpinner(document)
 
     expect(spinner.style.borderTopColor).toBe("var(--read-frog-muted-foreground)")
@@ -76,7 +72,7 @@ describe("spinner", () => {
     expect(spinner.style.borderTopWidth).toBe("1.5px")
   })
 
-  it("keeps the gray segment visible when reduced motion is enabled", async () => {
+  it("keeps the gray segment visible when reduced motion is enabled", () => {
     Object.defineProperty(window, "matchMedia", {
       value: vi.fn().mockReturnValue({
         matches: true,
@@ -99,7 +95,6 @@ describe("spinner", () => {
       writable: true,
     })
 
-    const { createLightweightSpinner } = await import("../spinner")
     const spinner = createLightweightSpinner(document)
 
     expect(animateMock).not.toHaveBeenCalled()
