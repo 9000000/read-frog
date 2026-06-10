@@ -1,7 +1,9 @@
 import { useAtomValue } from "jotai"
 import { useEffect } from "react"
 import { Toaster } from "sonner"
-import { configFieldsAtomMap } from "@/utils/atoms/config"
+import { configAtom, configFieldsAtomMap } from "@/utils/atoms/config"
+import { isSiteEnabled, getEffectiveSiteControlUrl } from "@/utils/site-control"
+import { useCurrentUrl } from "@/hooks/use-current-url"
 import { useInputTranslation } from "./input-translation"
 import {
   SELECTION_CONTENT_OVERLAY_LAYERS,
@@ -12,6 +14,22 @@ import { SelectionCustomActionProvider } from "./selection-toolbar/custom-action
 import { SelectionTranslationProvider } from "./selection-toolbar/translate-button/provider"
 
 export default function App({
+  uiContainer,
+}: {
+  uiContainer: HTMLElement
+}) {
+  const config = useAtomValue(configAtom)
+  const currentUrl = useCurrentUrl()
+  const siteControlUrl = getEffectiveSiteControlUrl(currentUrl)
+
+  if (!isSiteEnabled(siteControlUrl, config)) {
+    return null
+  }
+
+  return <SelectionToolbarWrapper uiContainer={uiContainer} />
+}
+
+function SelectionToolbarWrapper({
   uiContainer,
 }: {
   uiContainer: HTMLElement
