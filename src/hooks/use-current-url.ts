@@ -40,3 +40,4 @@ function getSnapshot(): string {
 export function useCurrentUrl(): string {
   return useSyncExternalStore(subscribe, getSnapshot)
 }
+
