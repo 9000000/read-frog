@@ -44,6 +44,12 @@ function HydrateAtoms({
   return children
 }
 
+declare global {
+  interface Window {
+    __READ_FROG_SIDE_INJECTED__?: boolean
+  }
+}
+
 // eslint-disable-next-line import/no-mutable-exports
 export let shadowWrapper: HTMLElement | null = null
 
@@ -51,12 +57,16 @@ export default defineContentScript({
   matches: ["*://*/*", "file:///*"],
   cssInjectionMode: "ui",
   async main(ctx) {
-    const config = await getLocalConfig() ?? DEFAULT_CONFIG
-
-    // Check global site control
-    if (!isSiteEnabled(window.location.href, config)) {
+    // Prevent double injection (manifest-based + programmatic injection)
+    if (window.__READ_FROG_SIDE_INJECTED__)
       return
-    }
+    window.__READ_FROG_SIDE_INJECTED__ = true
+
+    ctx.onInvalidated(() => {
+      window.__READ_FROG_SIDE_INJECTED__ = false
+    })
+
+    const config = await getLocalConfig() ?? DEFAULT_CONFIG
 
     const themeMode = await getLocalThemeMode()
 

@@ -18,6 +18,7 @@ import { APP_NAME } from "@/utils/constants/app"
 import { sendMessage } from "@/utils/message"
 import { cn } from "@/utils/styles/utils"
 import { matchDomainPattern } from "@/utils/url"
+import { useCurrentUrl } from "@/hooks/use-current-url"
 import { enablePageTranslationAtom, isDraggingButtonAtom } from "../../atoms"
 import { shadowWrapper } from "../../index"
 import HiddenButton from "./components/hidden-button"
@@ -320,7 +321,9 @@ export default function FloatingButton() {
     }
   }
 
-  if (!floatingButton.enabled || floatingButton.disabledFloatingButtonPatterns.some(pattern => matchDomainPattern(window.location.href, pattern))) {
+  const currentUrl = useCurrentUrl()
+
+  if (!floatingButton.enabled || floatingButton.disabledFloatingButtonPatterns.some(pattern => matchDomainPattern(currentUrl, pattern))) {
     return null
   }
 
