@@ -66,6 +66,7 @@ async function getSelectionWebPagePromptContext(
   const webSummary = await getOrGenerateWebPageSummary(webPageContext, providerConfig, enableAIContentAware)
   return {
     webTitle: webPageContext.webTitle,
+    webDescription: webPageContext.webDescription,
     webContent: webPageContext.webContent,
     webSummary: webSummary ?? undefined,
   }
@@ -112,6 +113,7 @@ async function translateWithLlm({
       ? {
           context: {
             webTitle: webPageContext.webTitle,
+            webDescription: webPageContext.webDescription,
             webContent: webPageContext.webContent,
             webSummary: webPageContext.webSummary,
           },

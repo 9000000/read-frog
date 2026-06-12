@@ -181,7 +181,10 @@ async function createTranslationQueues<TContext>(config: TranslationQueueSetupCo
     maxRetries: 3,
     enableFallbackToIndividual: true,
     getBatchKey: (data) => {
-      return Sha256Hex(`${data.langConfig.sourceCode}-${data.langConfig.targetCode}-${data.providerConfig.id}-${data.textType ?? "plain"}`)
+      return Sha256Hex(
+        `${data.langConfig.sourceCode}-${data.langConfig.targetCode}-${data.providerConfig.id}-${data.textType ?? "plain"}`,
+        data.context ? JSON.stringify(data.context) : "",
+      )
     },
     getCharacters: data => data.text.length,
     executeBatch: async (dataList) => {
@@ -228,7 +231,7 @@ export async function setUpWebPageTranslationQueue() {
   })
 
   onMessage("enqueueTranslateRequest", async (message) => {
-    const { data: { text, langConfig, providerConfig, scheduleAt, hash, textType, webTitle, webContent, webSummary } } = message
+    const { data: { text, langConfig, providerConfig, scheduleAt, hash, textType, webTitle, webDescription, webContent, webSummary } } = message
 
     // Check cache first
     if (hash) {
@@ -241,6 +244,7 @@ export async function setUpWebPageTranslationQueue() {
     let result = ""
     const context: WebPagePromptContext = {
       webTitle: normalizePromptContextValue(webTitle),
+      webDescription: normalizePromptContextValue(webDescription),
       webContent: normalizePromptContextValue(webContent),
       webSummary: normalizePromptContextValue(webSummary),
     }
@@ -303,7 +307,7 @@ export async function setUpSubtitlesTranslationQueue() {
   })
 
   onMessage("enqueueSubtitlesTranslateRequest", async (message) => {
-    const { data: { text, langConfig, providerConfig, scheduleAt, hash, textType, videoTitle, summary } } = message
+    const { data: { text, langConfig, providerConfig, scheduleAt, hash, textType, webTitle, webDescription, summary } } = message
 
     if (hash) {
       const cached = await db.translationCache.get(hash)
@@ -314,7 +318,8 @@ export async function setUpSubtitlesTranslationQueue() {
 
     let result = ""
     const context: SubtitlePromptContext = {
-      videoTitle: normalizePromptContextValue(videoTitle),
+      webTitle: normalizePromptContextValue(webTitle),
+      webDescription: normalizePromptContextValue(webDescription),
       videoSummary: normalizePromptContextValue(summary),
     }
 

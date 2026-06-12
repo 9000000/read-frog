@@ -25,7 +25,7 @@ import { defineExtensionMessaging } from "@webext-core/messaging"
 interface ProtocolMap {
   // navigation
   openPage: (data: { url: string, active?: boolean }) => void
-  openOptionsPage: () => void
+  openOptionsPage: (data?: { route?: `/${string}` }) => void
   toggleSidePanel: (data?: { source?: "content-script" | "extension-user-action" }) => Promise<{ ok: true, action: "opened" | "closed" } | { ok: false, reason: "missing-window" | "unsupported" | "toggle-failed" | "requires-extension-user-action" }>
   // config
   getInitialConfig: () => Config | null
@@ -53,9 +53,9 @@ interface ProtocolMap {
   getPinState: () => boolean
   returnPinState: (data: { isPinned: boolean }) => void
   // request
-  enqueueTranslateRequest: (data: { text: string, langConfig: Config["language"], providerConfig: ProviderConfig, scheduleAt: number, hash: string, textType?: "html" | "plain", webTitle?: string | null, webContent?: string | null, webSummary?: string | null }) => Promise<string>
+  enqueueTranslateRequest: (data: { text: string, langConfig: Config["language"], providerConfig: ProviderConfig, scheduleAt: number, hash: string, textType?: "html" | "plain", webTitle?: string | null, webDescription?: string | null, webContent?: string | null, webSummary?: string | null }) => Promise<string>
   getOrGenerateWebPageSummary: (data: { webTitle: string, webContent: string, providerConfig: ProviderConfig }) => Promise<string | null>
-  enqueueSubtitlesTranslateRequest: (data: { text: string, langConfig: Config["language"], providerConfig: ProviderConfig, scheduleAt: number, hash: string, textType?: "html" | "plain", videoTitle?: string | null, summary?: string | null }) => Promise<string>
+  enqueueSubtitlesTranslateRequest: (data: { text: string, langConfig: Config["language"], providerConfig: ProviderConfig, scheduleAt: number, hash: string, textType?: "html" | "plain", webTitle?: string | null, webDescription?: string | null, summary?: string | null }) => Promise<string>
   getSubtitlesSummary: (data: { videoTitle: string, subtitlesContext: string, providerConfig: ProviderConfig }) => Promise<string | null>
   backgroundGenerateText: (data: BackgroundGenerateTextPayload) => Promise<BackgroundGenerateTextResponse>
   // AI subtitle segmentation
