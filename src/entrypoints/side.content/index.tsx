@@ -65,9 +65,26 @@ export default defineContentScript({
       window.__READ_FROG_SIDE_INJECTED__ = false
     })
 
-    const config = await getLocalConfig() ?? DEFAULT_CONFIG
+    let config: Config
+    let themeMode: ThemeMode
+    try {
+      config = await getLocalConfig() ?? DEFAULT_CONFIG
+      themeMode = await getLocalThemeMode()
+    }
+    catch {
+      // Storage read failed (e.g. extension context invalidated mid-flight).
+      // Reset the guard so a future injection attempt can try again.
+      window.__READ_FROG_SIDE_INJECTED__ = false
+      return
+    }
 
-    const themeMode = await getLocalThemeMode()
+    // After awaiting async work the context may have been invalidated
+    // (extension reloaded, navigated away, etc.).  Bail out early so
+    // createShadowRootUi doesn't silently fail or mount into a dead context.
+    if (!ctx.isValid) {
+      window.__READ_FROG_SIDE_INJECTED__ = false
+      return
+    }
 
     const ui = await createShadowRootUi(ctx, {
       name: kebabCase(APP_NAME),

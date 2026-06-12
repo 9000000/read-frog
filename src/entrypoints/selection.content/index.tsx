@@ -108,7 +108,19 @@ export default defineContentScript({
     })
 
     // Check global site control
-    const config = await getLocalConfig() ?? DEFAULT_CONFIG
+    let config: Config
+    try {
+      config = await getLocalConfig() ?? DEFAULT_CONFIG
+    }
+    catch {
+      window.__READ_FROG_SELECTION_INJECTED__ = false
+      return
+    }
+
+    if (!ctx.isValid) {
+      window.__READ_FROG_SELECTION_INJECTED__ = false
+      return
+    }
 
     void mountSelectionUI(ctx, config)
   },
