@@ -114,8 +114,10 @@ export default defineBackground({
     // Initialize action icons asynchronously
     void initializeActionIcons()
 
-    void setUpWebPageTranslationQueue()
-    void setUpSubtitlesTranslationQueue()
+    // Synchronous: all queue message handlers register in the first turn of
+    // the SW so wake-triggering messages are never dropped during init.
+    setUpWebPageTranslationQueue()
+    setUpSubtitlesTranslationQueue()
     void setUpDatabaseCleanup()
     setUpConfigBackup()
 
